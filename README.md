@@ -27,4 +27,10 @@ py -3.12 -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-If the application requires API keys or database credentials, configure them in a local `.env` file. Do not commit secrets.
+Configure API keys and database credentials in a local `.env` file. Tavily search requires:
+
+```dotenv
+TAVILY_API_KEY=your_tavily_api_key
+```
+
+Do not commit secrets.
