@@ -43,7 +43,7 @@ def get_database_url() -> str:
 # ==========================
 
 llm = ChatGroq(
-    model= "llama-3.3.70b-versatile",
+    model= "openai/gpt-oss-120b",
     api_key= GROQ_API_KEY,
 )
 
@@ -52,7 +52,7 @@ llm = ChatGroq(
 # =========================
 
 class TravelState(TypedDict):
-    messages: Annotated[list[AnyMessage], operator.Add]
+    messages: Annotated[list[AnyMessage], operator.add]
     user_query : str
     flight_results : str
     hotel_results : str
