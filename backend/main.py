@@ -1,50 +1,42 @@
-import traceback, uvicorn
-from pathlib import Path
+import os
+import traceback
 
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+import uvicorn
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from backend import run_travel_agent
-
-BASE_DIR = Path(__file__).resolve().parent
-
+from backend.agent import run_travel_agent
 
 app = FastAPI(
-    title= "TripBuddy AI",
-    description= "LangGraph Multi-Agent Travel Planner with FastAPI Frontend",
-    version= "1.0.0"
+    title="TripBuddy AI API",
+    description="API for the LangGraph multi-agent travel planner",
+    version="1.0.0",
 )
 
-app.mount(
-    "/static",
-    StaticFiles(directory=str(BASE_DIR/"static")),
-    name="static"
-)
-
-templates = Jinja2Templates(
-    directory= str(BASE_DIR/"templates")
+frontend_origins = [
+    origin.strip()
+    for origin in os.getenv(
+        "FRONTEND_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"
+    ).split(",")
+    if origin.strip()
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=frontend_origins,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 
 class TravelRequest(BaseModel):
-    message : str
-    thread_id : str | None = None
-
-
-@app.get("/", response_class=HTMLResponse)
-async def home(request : Request):
-    return templates.TemplateResponse(
-        request= request,
-        name= "index.html",
-        context= {}
-    )
+    message: str
+    thread_id: str | None = None
 
 
 @app.post("/api/travel")
-async def travel_planner(request_data : TravelRequest):
+async def travel_planner(request_data: TravelRequest):
     try:
         user_message = request_data.message.strip()
 
@@ -89,20 +81,15 @@ async def travel_planner(request_data : TravelRequest):
 @app.get("/health")
 async def health_check():
     return {
-        "status" : "ok",
-        "message" : "AI Travel Planner API is running"
+        "status": "ok",
+        "message": "AI Travel Planner API is running",
     }
-
-
-@app.get("facicon.ico")
-async def favicon():
-    return JSONResponse(content={})
 
 
 if __name__ == "__main__":
     uvicorn.run(
-        "app:app",
-        host= "127.0.0.1",
-        port= 8000,
-        reload= True
+        "backend.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
     )

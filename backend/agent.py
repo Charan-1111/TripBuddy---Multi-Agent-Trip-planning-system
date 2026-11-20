@@ -12,8 +12,8 @@ from langchain_core.messages import (
     SystemMessage,
 )
 from langchain_groq import ChatGroq
-from tools.tavily_tool import tavily_search
-from tools.flight_tool import search_flights
+from backend.tools.tavily_tool import tavily_search
+from backend.tools.flight_tool import search_flights
 
 load_dotenv()
 
@@ -89,7 +89,7 @@ def hotel_agent(state: TravelState):
 
     return {
         "hotel_results" : hotels_data,
-        "message" : [
+        "messages" : [
             AIMessage(content="Hotels information fetched succesfully"),
         ],
         "llm_calls" : state.get("llm_calls", 0) + 1

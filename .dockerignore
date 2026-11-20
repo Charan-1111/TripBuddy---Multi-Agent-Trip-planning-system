@@ -5,3 +5,11 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Local configuration and frontend build outputs
+.env
+.env.*
+frontend/node_modules/
+frontend/.next/
+**/__pycache__/
+frontend/

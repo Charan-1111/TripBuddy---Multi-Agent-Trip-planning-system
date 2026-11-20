@@ -1,0 +1,4 @@
+1. Separate out the front and backend code and make the code readable
+2. Ask for the location access and check for the nearest airport
+3. Application also needs to track the expenses in the trip
+4. Can make groups and ask people to join
