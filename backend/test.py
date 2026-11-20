@@ -1,5 +1,5 @@
-from tools.tavily_tool import tavily_search
-from tools.flight_tool import search_flights
+from backend.tools.tavily_tool import tavily_search
+from backend.tools.flight_tool import search_flights
 
 # res = tavily_search("Best hotels in Chilakaluripet Andhra Pradesh India", limit=3)
 

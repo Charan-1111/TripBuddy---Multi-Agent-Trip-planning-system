@@ -29,7 +29,7 @@ COUNTRY_ALIASES = {
     "korea": "KR",
     "russia": "RU",
     "vietnam": "VN",
-    "India": "BD",
+    "India": "IN",
     "india": "IN",
     "japan": "JP",
     "china": "CN",
