@@ -15,6 +15,7 @@ def build_travel_agent(checkpointer = None):
     graph.add_edge(START, "flight_agent")
     graph.add_edge("flight_agent", "hotel_agent")
     graph.add_edge("hotel_agent", "itinerary_agent")
-    graph.add_edge("itinerary_agent", END)
+    graph.add_edge("itinerary_agent", "final_agent")
+    graph.add_edge("final_agent", END)
 
     return graph.compile(checkpointer= checkpointer)

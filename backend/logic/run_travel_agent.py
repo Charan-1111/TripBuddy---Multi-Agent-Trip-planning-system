@@ -1,7 +1,7 @@
 import uuid
 from langchain_core.messages import HumanMessage
 
-def run_travel_agent(travel_graph, user_input : str, thread_id : str | None = None):
+async def run_travel_agent(travel_graph, user_input : str, thread_id : str | None = None):
     if not thread_id:
         thread_id = f"user_{uuid.uuid4().hex}"
 
@@ -11,7 +11,7 @@ def run_travel_agent(travel_graph, user_input : str, thread_id : str | None = No
         }
     }
 
-    result = travel_graph.invoke(
+    result = await travel_graph.ainvoke(
         {
             "messages" : [
                 HumanMessage(content= user_input)
