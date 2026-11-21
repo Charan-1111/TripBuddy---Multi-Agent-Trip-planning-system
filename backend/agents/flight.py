@@ -12,6 +12,5 @@ def flight_agent(state : TravelState):
         "flight_results" : flights_data,
         "messages" : [
             AIMessage(content="Flight data retrieved successfully."),
-        ],
-        "llm_calls": state.get("llm_calls", 0) + 1,
+        ]
     }

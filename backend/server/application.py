@@ -1,7 +1,10 @@
-import os, uvicorn, psycopg
+import os
+import uvicorn
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from langgraph.checkpoint.postgres import PostgresSaver
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from psycopg import AsyncConnection
 from psycopg.rows import dict_row
 
 from .router import Router
@@ -15,19 +18,8 @@ class Application:
             title="TripBuddy AI API",
             description="API for the LangGraph multi-agent travel planner",
             version="1.0.0",
+            lifespan=self.lifespan,
         )
-        
-
-        _conn = psycopg.connect(
-            self.get_database_url(),
-            autocommit= True,
-            row_factory= dict_row
-        )
-
-        checkpointer= PostgresSaver(_conn)
-        checkpointer.setup()
-
-        self.app.state.travel_graph = build_travel_agent(checkpointer=checkpointer)
 
     def get_database_url(self) -> str:
         url = os.getenv("DATABASE_URL")
@@ -39,6 +31,18 @@ class Application:
             url += "?sslmode=require"
 
         return url
+
+    @asynccontextmanager
+    async def lifespan(self, app: FastAPI):
+        async with await AsyncConnection.connect(
+            self.get_database_url(),
+            autocommit=True,
+            row_factory=dict_row,
+        ) as connection:
+            checkpointer = AsyncPostgresSaver(connection)
+            await checkpointer.setup()
+            app.state.travel_graph = build_travel_agent(checkpointer=checkpointer)
+            yield
 
     def initialize_application(self):
         router = Router(self.app)
