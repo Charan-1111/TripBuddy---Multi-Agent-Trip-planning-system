@@ -10,5 +10,5 @@ class TravelState(TypedDict):
     user_query : str
     flight_results : str
     hotel_results : str
-    itinerary : str
+    itinerary : dict | None
     llm_calls : int
