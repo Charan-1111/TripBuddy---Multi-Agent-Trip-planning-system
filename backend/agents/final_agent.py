@@ -1,3 +1,4 @@
+import json
 from graph import TravelState
 from llm.groq import llm
 from langchain_core.messages import (
@@ -7,6 +8,12 @@ from langchain_core.messages import (
 
 
 def final_agent(state : TravelState):
+    itinerary_json = json.dumps(
+        state["itinerary"],
+        indent=2,
+        ensure_ascii=False,
+    )
+
     final_prompt = f"""
 Generate the final travel response for the user
 
@@ -20,7 +27,7 @@ Hotels:
 {state["hotel_results"]}
 
 Itinerary:
-{state["itinerary"]}
+{itinerary_json}
 
 Format the final answer beautifully using the following sections:
 

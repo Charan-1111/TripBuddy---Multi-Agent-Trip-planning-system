@@ -19,7 +19,7 @@ async def run_travel_agent(travel_graph, user_input : str, thread_id : str | Non
             "user_query" : user_input,
             "flight_results" : "",
             "hotel_results" : "",
-            "itinerary" : "",
+            "itinerary" : None,
             "llm_calls" : 0
         },
         config = config
@@ -32,6 +32,6 @@ async def run_travel_agent(travel_graph, user_input : str, thread_id : str | Non
         "answer" : final_answer,
         "flight_results" : result.get("flight_results", ""),
         "hotel_results" : result.get("hotel_results", ""),
-        "itinerary" : result.get("itinerary", ""),
+        "itinerary" : result.get("itinerary"),
         "llm_calls" : result.get("llm_calls", 0),
     }
