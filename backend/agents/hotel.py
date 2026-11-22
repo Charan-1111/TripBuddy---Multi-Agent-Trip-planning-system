@@ -14,3 +14,4 @@ def hotel_agent(state : TravelState):
             AIMessage(content="Hotels information fetched succesfully"),
         ]
     }
+
