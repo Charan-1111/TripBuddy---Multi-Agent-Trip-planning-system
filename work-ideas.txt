@@ -3,4 +3,4 @@
 3. Application also needs to track the expenses in the trip
 4. Can make groups and ask people to join
 5. Can have the history of the past plans
-6. 
+6. Why we only need to find the airport, can we suggest the bus or train travel as well
