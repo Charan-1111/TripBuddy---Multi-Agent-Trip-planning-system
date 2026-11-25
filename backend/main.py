@@ -1,6 +1,6 @@
 from server import Application
 
-application = Application()
+application = Application.initiating()
 application.initialize_application()
 app = application.app
 

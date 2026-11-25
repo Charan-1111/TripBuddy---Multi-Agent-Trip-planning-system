@@ -1,6 +1,9 @@
+import json
 import os
-import uvicorn
 from contextlib import asynccontextmanager
+from pathlib import Path
+
+import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
@@ -12,14 +15,16 @@ from graph import build_travel_agent
 
 load_dotenv()
 
+
 class Application:
-    def __init__(self):
+    def __init__(self, airports=None):
         self.app = FastAPI(
             title="TripBuddy AI API",
             description="API for the LangGraph multi-agent travel planner",
             version="1.0.0",
             lifespan=self.lifespan,
         )
+        self.airports = airports or []
 
     def get_database_url(self) -> str:
         url = os.getenv("DATABASE_URL")
@@ -43,6 +48,14 @@ class Application:
             await checkpointer.setup()
             app.state.travel_graph = build_travel_agent(checkpointer=checkpointer)
             yield
+
+    @classmethod
+    def initiating(cls):
+        airport_file = Path(__file__).resolve().parents[1] / "india_airports.json"
+        with airport_file.open("r", encoding="utf-8") as file:
+            data = json.load(file)
+
+        return cls(data)
 
     def initialize_application(self):
         router = Router(self.app)
