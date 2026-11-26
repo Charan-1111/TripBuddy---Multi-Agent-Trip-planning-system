@@ -12,6 +12,7 @@ from psycopg.rows import dict_row
 
 from .router import Router
 from graph import build_travel_agent
+from models import Airport
 
 load_dotenv()
 
@@ -47,6 +48,7 @@ class Application:
             checkpointer = AsyncPostgresSaver(connection)
             await checkpointer.setup()
             app.state.travel_graph = build_travel_agent(checkpointer=checkpointer)
+            app.state.airports = self.airports
             yield
 
     @classmethod
@@ -55,7 +57,9 @@ class Application:
         with airport_file.open("r", encoding="utf-8") as file:
             data = json.load(file)
 
-        return cls(data)
+        airports_data = [Airport(**row) for row in data]
+
+        return cls(airports_data)
 
     def initialize_application(self):
         router = Router(self.app)
@@ -65,5 +69,5 @@ class Application:
         uvicorn.run(
             self.app,
             host="0.0.0.0",
-            port=int(os.getenv("PORT", "8000")),
+            port=int(os.getenv("PORT", "8000"))
         )
