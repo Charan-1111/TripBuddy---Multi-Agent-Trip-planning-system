@@ -6,7 +6,8 @@ class TravelRequest(BaseModel):
         max_length= 5000,
         description= "User's travel planning request"
     )
-
+    latitude : float
+    longitude : float
     thread_id : str | None = Field(
         default= None,
         description= "Conversation thread identifier"

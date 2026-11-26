@@ -446,7 +446,11 @@ Arrival:
 """.strip()
 
 
-def search_flights(query: str, limit: int = 10):
+def search_flights(
+    query: str,
+    origin_iats: list[str] | None = None,
+    limit: int = 10,
+):
     if not API_KEY:
         return (
             "Flight API error: AVIATIONSTACK_API_KEY is missing.\n"
@@ -455,61 +459,112 @@ def search_flights(query: str, limit: int = 10):
         )
 
     dep_iata, arr_iata = parse_route(query)
-
-    params = {
-        "access_key": API_KEY,
-        "limit": min(limit, 100),
-    }
-
-    if dep_iata:
-        params["dep_iata"] = dep_iata
-
-    if arr_iata:
-        params["arr_iata"] = arr_iata
-
-    try:
-        response = requests.get(BASE_URL, params=params, timeout=30)
-        data = response.json()
-    except requests.exceptions.RequestException as e:
-        return f"Flight API request failed: {e}"
-    except ValueError:
-        return "Flight API returned invalid JSON."
-
-    if "error" in data:
-        error = data["error"]
-        return (
-            "Flight API error:\n"
-            f"Code: {error.get('code', 'Unknown')}\n"
-            f"Message: {error.get('message', 'Unknown error')}"
+    requested_origins = list(
+        dict.fromkeys(
+            origin.strip().upper()
+            for origin in (origin_iats or [])
+            if isinstance(origin, str) and origin.strip()
         )
+    )
+    has_explicit_origin = (
+        bool(re.search(r"\bfrom\s+", query, re.IGNORECASE))
+        or len(re.findall(r"\b[A-Z]{3}\b", query)) >= 2
+        or len(find_location_mentions(query)) >= 2
+    )
 
-    flight_data = data.get("data", [])
+    if dep_iata and (dep_iata != DEFAULT_ORIGIN_IATA or has_explicit_origin):
+        search_origins = [dep_iata]
+    elif requested_origins:
+        search_origins = requested_origins
+    elif dep_iata:
+        search_origins = [dep_iata]
+    else:
+        search_origins = [None]
 
-    if not flight_data:
+    flights_by_origin = {origin: [] for origin in search_origins}
+    api_errors = []
+    for origin in search_origins:
+        params = {
+            "access_key": API_KEY,
+            "limit": min(limit, 100),
+        }
+
+        if origin:
+            params["dep_iata"] = origin
+
+        if arr_iata:
+            params["arr_iata"] = arr_iata
+
+        try:
+            response = requests.get(BASE_URL, params=params, timeout=30)
+            data = response.json()
+        except requests.exceptions.RequestException as e:
+            api_errors.append(f"{origin or 'Global search'}: request failed: {e}")
+            continue
+        except ValueError:
+            api_errors.append(f"{origin or 'Global search'}: API returned invalid JSON.")
+            continue
+
+        if "error" in data:
+            error = data["error"]
+            api_errors.append(
+                f"{origin or 'Global search'}: {error.get('message', 'Unknown error')} "
+                f"(code: {error.get('code', 'Unknown')})"
+            )
+            continue
+
+        flights_by_origin[origin].extend(data.get("data", []))
+
+    if not any(flights_by_origin.values()):
         route_text = ""
 
-        if dep_iata and arr_iata:
-            route_text = f" for route {dep_iata} to {arr_iata}"
-        elif dep_iata:
-            route_text = f" from {dep_iata}"
+        if search_origins and search_origins[0] is not None:
+            if len(search_origins) == 1 and arr_iata:
+                route_text = f" for route {search_origins[0]} to {arr_iata}"
+            else:
+                route_text = f" from {', '.join(search_origins)}"
+                if arr_iata:
+                    route_text += f" to {arr_iata}"
         elif arr_iata:
             route_text = f" to {arr_iata}"
 
-        return (
+        no_results = (
             f"No live flight data found{route_text}.\n\n"
             "Note: AviationStack provides live/status flight data, not ticket prices. "
             "For actual fare prices, use a flight-pricing API such as Amadeus."
         )
+        if api_errors:
+            return "Flight API errors:\n" + "\n".join(api_errors) + "\n\n" + no_results
+        return no_results
 
-    route_info = "Global live flights"
+    selected_flights = []
+    for flight_index in range(max(map(len, flights_by_origin.values()))):
+        for origin in search_origins:
+            flights = flights_by_origin[origin]
+            if flight_index < len(flights) and len(selected_flights) < limit:
+                selected_flights.append((origin, flights[flight_index]))
 
-    if dep_iata and arr_iata:
-        route_info = f"Live flights from {dep_iata} to {arr_iata}"
-    elif dep_iata:
-        route_info = f"Live flights from {dep_iata}"
-    elif arr_iata:
-        route_info = f"Live flights to {arr_iata}"
+    sections = []
+    for origin in search_origins:
+        flights = [
+            format_flight(flight)
+            for flight_origin, flight in selected_flights
+            if flight_origin == origin
+        ]
+        if not flights:
+            continue
 
-    formatted_flights = [format_flight(flight) for flight in flight_data[:limit]]
+        if origin and arr_iata:
+            route_info = f"Live flights from {origin} to {arr_iata}"
+        elif origin:
+            route_info = f"Live flights from {origin}"
+        elif arr_iata:
+            route_info = f"Live flights to {arr_iata}"
+        else:
+            route_info = "Global live flights"
+        sections.append(f"{route_info}\n\n" + "\n\n---\n\n".join(flights))
 
-    return f"{route_info}\n\n" + "\n\n---\n\n".join(formatted_flights)
+    result = "\n\n---\n\n".join(sections)
+    if api_errors:
+        return "Some flight searches failed:\n" + "\n".join(api_errors) + "\n\n" + result
+    return result

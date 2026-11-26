@@ -62,12 +62,22 @@ export default function HomePage() {
       return;
     }
 
+    if (!location) {
+      setError("Please share your current location before generating a plan.");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await fetch(`${apiUrl}/api/travel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: trimmedMessage, thread_id: threadId }),
+        body: JSON.stringify({
+          message: trimmedMessage,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          thread_id: threadId,
+        }),
       });
       const data = (await response.json()) as TravelResponse;
 

@@ -6,7 +6,7 @@ from langchain_core.messages import AIMessage
 def flight_agent(state : TravelState):
     query = state["user_query"]
 
-    flights_data = search_flights(query)
+    flights_data = search_flights(query, state["origin_iatas"])
 
     return {
         "flight_results" : flights_data,

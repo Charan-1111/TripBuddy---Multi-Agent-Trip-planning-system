@@ -12,3 +12,4 @@ class TravelState(TypedDict):
     hotel_results : str
     itinerary : dict | None
     llm_calls : int
+    origin_iatas : list[str]

@@ -1,7 +1,9 @@
 import uuid
 from langchain_core.messages import HumanMessage
+from models import Airport
 
-async def run_travel_agent(travel_graph, user_input : str, thread_id : str | None = None):
+
+async def run_travel_agent(travel_graph, user_input : str, nearest_aiports : list[str], thread_id : str | None = None):
     if not thread_id:
         thread_id = f"user_{uuid.uuid4().hex}"
 
@@ -20,7 +22,8 @@ async def run_travel_agent(travel_graph, user_input : str, thread_id : str | Non
             "flight_results" : "",
             "hotel_results" : "",
             "itinerary" : None,
-            "llm_calls" : 0
+            "llm_calls" : 0,
+            "origin_iatas" : nearest_aiports,
         },
         config = config
     )

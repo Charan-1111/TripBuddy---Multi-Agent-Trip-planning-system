@@ -2,8 +2,11 @@ import traceback
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
 from logic import run_travel_agent
+from tools import search_flights
 
 from models import TravelRequest, TravelResponse
+
+from logic import find_nearby_airports
 
 
 travel_agent = APIRouter()
@@ -22,10 +25,18 @@ async def travel_planner(request_data: TravelRequest, request : Request) -> Trav
                 }
             )
 
+        nearest_aiports = find_nearby_airports((request_data.latitude, request_data.longitude), request.app.state.airports)
+
+        origin_iatas = [
+            airport.iata_code
+            for airport, _distance in nearest_aiports
+        ]
+
         result = await run_travel_agent(
             request.app.state.travel_graph,
             user_input= user_message,
-            thread_id= request_data.thread_id
+            nearest_aiports= origin_iatas,
+            thread_id= request_data.thread_id,
         )
 
         return TravelResponse(
@@ -40,3 +51,10 @@ async def travel_planner(request_data: TravelRequest, request : Request) -> Trav
             status_code=500,
             detail="Unable to generate travel plan",
         )
+
+
+@travel_agent.post("/get/flights")
+async def get_flights(request : Request):
+    data = await request.json()
+
+    return find_nearby_airports((data["latitude"], data["longitude"]), request.app.state.airports)
