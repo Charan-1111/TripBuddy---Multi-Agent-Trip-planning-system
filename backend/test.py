@@ -4,6 +4,7 @@ from fastapi import FastAPI
 
 from logic.nearest_airports import find_nearby_airports
 from models import Airport
+from tools.flight_tool import parse_route
 
 
 class FindNearbyAirportsTest(unittest.TestCase):
@@ -32,6 +33,17 @@ class FindNearbyAirportsTest(unittest.TestCase):
             ["DEL", "BOM"],
         )
         self.assertLess(nearby[0][1], nearby[1][1])
+
+
+class ParseFlightRouteTest(unittest.TestCase):
+    def test_prefers_city_airport_when_country_is_also_in_destination(self):
+        dep_iata, arr_iata = parse_route(
+            "Plan a trip to bangalore, india for 7 days for 2 persons "
+            "under the budget of 50000"
+        )
+
+        self.assertIsNone(dep_iata)
+        self.assertEqual(arr_iata, "BLR")
 
 
 if __name__ == "__main__":

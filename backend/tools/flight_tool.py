@@ -83,6 +83,7 @@ CITY_MAIN_AIRPORT = {
     "chennai": "MAA",
     "bangalore": "BLR",
     "bengaluru": "BLR",
+    "vijayawada" : "VGA",
     "tokyo": "NRT",
     "osaka": "KIX",
     "kyoto": "KIX",
@@ -229,6 +230,11 @@ def resolve_location_to_iata(location : str):
     # City Prefrerred Airport
     if location_cleaned in CITY_MAIN_AIRPORT:
         return CITY_MAIN_AIRPORT[location_cleaned]
+
+    # Prefer a mentioned city over a country when both are in the location.
+    for city, airport_code in CITY_MAIN_AIRPORT.items():
+        if re.search(rf"\b{re.escape(city)}\b", location_cleaned):
+            return airport_code
 
     # Country preferred airport
     country_code = country_name_to_code(location_cleaned)
