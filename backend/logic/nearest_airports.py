@@ -1,7 +1,7 @@
 from models import Airport
 from utils import calculate_distance
 
-def find_nearby_airports(user_current_location : tuple, airports : list[Airport], limit : int = 3):
+def find_nearby_airports(user_current_location : tuple, airports : list[Airport], limit : int = 1):
     candidates = [
         (
             airport,
