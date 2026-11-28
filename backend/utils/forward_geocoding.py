@@ -1,13 +1,22 @@
 import asyncio
-
+import os
 import httpx
+from dotenv import load_dotenv
 
 
-async def geocode(
-    client: httpx.AsyncClient, place: str
+load_dotenv()
+LOCATION_API = os.getenv("LOCATION_API")
+
+
+async def get_geolocation_for_provided_place(
+    client: httpx.AsyncClient,
+    place: str,
 ) -> tuple[float, float] | None:
+    if not LOCATION_API:
+        raise ValueError("LOCATION_API environment variable is not set.")
+
     response = await client.get(
-        "https://nominatim.openstreetmap.org/search",
+        LOCATION_API,
         params={"q": place, "format": "jsonv2", "limit": 1},
     )
     response.raise_for_status()
@@ -25,7 +34,7 @@ async def main() -> None:
         headers={"User-Agent": "TripBuddy/0.1 (contact: charanavvaru11@gmail.com)"},
     ) as client:
         try:
-            coordinates = await geocode(client, "Ooty, Tamil Nadu, India")
+            coordinates = await get_geolocation_for_provided_place(client, "Srisailam")
         except httpx.ConnectTimeout:
             print("Timed out while establishing a connection to Nominatim.")
         except httpx.ReadTimeout:

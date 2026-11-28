@@ -4,7 +4,7 @@ from fastapi import FastAPI
 
 from logic.nearest_airports import find_nearby_airports
 from models import Airport
-from tools.flight_tool import parse_route
+from tools.flight_tool import extract_destination_from_query, parse_route
 
 
 class FindNearbyAirportsTest(unittest.TestCase):
@@ -36,6 +36,41 @@ class FindNearbyAirportsTest(unittest.TestCase):
 
 
 class ParseFlightRouteTest(unittest.TestCase):
+    def test_extracts_destination_before_trip_constraints(self):
+        destination = extract_destination_from_query(
+            "Plan a trip to Ooty for 7 days for 2 people under a budget of 50000"
+        )
+
+        self.assertEqual(destination, "Ooty")
+
+    def test_extracts_destination_with_country(self):
+        destination = extract_destination_from_query(
+            "Plan a trip to Ooty, India for 7 days"
+        )
+
+        self.assertEqual(destination, "Ooty, India")
+
+    def test_extracts_destination_from_a_from_to_route(self):
+        destination = extract_destination_from_query(
+            "How to plan a trip from Bengaluru to Ooty for 7 days"
+        )
+
+        self.assertEqual(destination, "Ooty")
+
+    def test_extracts_destination_before_an_origin_clause(self):
+        destination = extract_destination_from_query(
+            "Plan a trip to Ooty from Bengaluru for 7 days"
+        )
+
+        self.assertEqual(destination, "Ooty")
+
+    def test_ignores_trailing_travel_question(self):
+        destination = extract_destination_from_query(
+            "Plan a trip to Ooty for 7 days and how to get there"
+        )
+
+        self.assertEqual(destination, "Ooty")
+
     def test_prefers_city_airport_when_country_is_also_in_destination(self):
         dep_iata, arr_iata = parse_route(
             "Plan a trip to bangalore, india for 7 days for 2 persons "
