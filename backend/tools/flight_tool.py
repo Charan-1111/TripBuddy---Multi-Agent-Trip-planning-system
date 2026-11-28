@@ -405,6 +405,28 @@ def parse_route(query: str):
     return None, None
 
 
+def extract_destination_from_query(query: str) -> str | None:
+    stop_words = (
+        "for|under|with|including|budget|on|during|"
+        "starting|departing|leaving|from|to"
+    )
+    matches = re.finditer(
+        rf"(?=\bto\s+(.+?)(?=\s+(?:{stop_words})\b|[.!?]|$))",
+        query.strip(),
+        re.IGNORECASE,
+    )
+    for match in reversed(list(matches)):
+        destination = match.group(1).strip(" ,")
+        first_word = destination.lower().split(maxsplit=1)[0] if destination else ""
+        if destination and first_word not in {
+            "plan", "travel", "go", "visit", "take", "book", "fly",
+            "get", "see", "explore", "find", "reach", "make",
+        }:
+            return destination
+
+    return None
+
+
 def format_flight(flight: dict):
     airline = flight.get("airline", {}).get("name") or "Unknown airline"
     flight_number = flight.get("flight", {}).get("iata") or "Unknown flight number"
@@ -456,6 +478,7 @@ def search_flights(
     query: str,
     origin_iats: list[str] | None = None,
     limit: int = 10,
+    destination_iata: str | None = None,
 ):
     if not API_KEY:
         return (
@@ -465,6 +488,9 @@ def search_flights(
         )
 
     dep_iata, arr_iata = parse_route(query)
+    if destination_iata:
+        arr_iata = destination_iata.strip().upper()
+
     requested_origins = list(
         dict.fromkeys(
             origin.strip().upper()

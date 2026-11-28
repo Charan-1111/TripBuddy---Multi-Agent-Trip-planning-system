@@ -3,7 +3,13 @@ from langchain_core.messages import HumanMessage
 from models import Airport
 
 
-async def run_travel_agent(travel_graph, user_input : str, nearest_aiports : list[str], thread_id : str | None = None):
+async def run_travel_agent(
+    travel_graph,
+    user_input: str,
+    nearest_aiports: list[str],
+    thread_id: str | None = None,
+    destination_iata: str | None = None,
+):
     if not thread_id:
         thread_id = f"user_{uuid.uuid4().hex}"
 
@@ -24,6 +30,7 @@ async def run_travel_agent(travel_graph, user_input : str, nearest_aiports : lis
             "itinerary" : None,
             "llm_calls" : 0,
             "origin_iatas" : nearest_aiports,
+            "destination_iata": destination_iata,
         },
         config = config
     )

@@ -1,4 +1,4 @@
-import json
+import json, httpx
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -49,7 +49,13 @@ class Application:
             await checkpointer.setup()
             app.state.travel_graph = build_travel_agent(checkpointer=checkpointer)
             app.state.airports = self.airports
-            yield
+
+            async with httpx.AsyncClient(
+                timeout=httpx.Timeout(15.0, connect=5.0),
+                headers={"User-Agent": "TripBuddy/0.1 (contact: charanavvaru11@gmail.com)"},
+            ) as client:
+                app.state.http_client = client
+                yield
 
     @classmethod
     def initiating(cls):

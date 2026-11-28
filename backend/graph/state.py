@@ -13,3 +13,4 @@ class TravelState(TypedDict):
     itinerary : dict | None
     llm_calls : int
     origin_iatas : list[str]
+    destination_iata : str | None
